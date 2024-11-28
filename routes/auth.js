@@ -1,8 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');  // Import User model
+const pool = require('../db'); // Import the database connection pool
 const router = express.Router();
+require('dotenv').config();
 
 // Register Route
 router.post('/register', async (req, res) => {
@@ -10,8 +11,8 @@ router.post('/register', async (req, res) => {
 
   try {
     // Check if the user already exists
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
+    const existingUserResult = await pool.query('SELECT * FROM User WHERE email = $1', [email]);
+    if (existingUserResult.rows.length > 0) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
@@ -19,7 +20,12 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create and save the new user
-    const user = await User.create({ username, email, password: hashedPassword });
+    const newUserResult = await pool.query(
+      'INSERT INTO User (username, email, password, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id, username, email',
+      [username, email, hashedPassword]
+    );
+
+    const user = newUserResult.rows[0];
 
     res.status(201).json({ message: 'User created successfully', user });
   } catch (error) {
@@ -34,10 +40,12 @@ router.post('/login', async (req, res) => {
 
   try {
     // Find the user by email
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
+    const userResult = await pool.query('SELECT * FROM User WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
+
+    const user = userResult.rows[0];
 
     // Compare the entered password with the hashed password
     const validPassword = await bcrypt.compare(password, user.password);
