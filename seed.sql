@@ -1,5 +1,6 @@
 -- Drop tables if they exist
 DROP TABLE IF EXISTS user_plant CASCADE;
+DROP TABLE IF EXISTS user_plants CASCADE;
 DROP TABLE IF EXISTS plants CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
@@ -37,7 +38,7 @@ VALUES
     ('Basil', 3, 'Keep in a sunny spot and water regularly.', NOW(), NOW());
 
 -- Create the user_plant table
-CREATE TABLE user_plant (
+CREATE TABLE user_plants (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     plant_id INT NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
@@ -46,7 +47,7 @@ CREATE TABLE user_plant (
 );
 
 -- Seed data for user_plant table
-INSERT INTO user_plant (user_id, plant_id, created_at, updated_at)
+INSERT INTO user_plants (user_id, plant_id, created_at, updated_at)
 VALUES 
     (1, 1, NOW(), NOW()),
     (1, 2, NOW(), NOW()),
