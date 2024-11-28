@@ -1,11 +1,11 @@
 const express = require('express');
-const pool = require('../db'); // Import the database connection pool
+const pool = require('../config/db');
 const router = express.Router();
 
 // Get all plants
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM Plant');
+    const result = await pool.query('SELECT * FROM plants'); // Updated table name
     res.json(result.rows);
   } catch (error) {
     console.error('Error retrieving plants:', error);
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT * FROM Plant WHERE id = $1', [id]);
+    const result = await pool.query('SELECT * FROM plants WHERE id = $1', [id]); // Updated table name
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Plant not found' });
     }
@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
   const { name, water_intervals, care_info } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO Plant (name, water_intervals, care_info, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *',
+      'INSERT INTO plants (name, water_intervals, care_info, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *', // Updated table name
       [name, water_intervals, care_info]
     );
     res.status(201).json(result.rows[0]);

@@ -1,6 +1,6 @@
 const express = require('express');
 const authenticateJWT = require('../middleware/auth'); // Authentication middleware
-const pool = require('../db'); // Database connection pool
+const pool = require('../config/db');
 const router = express.Router();
 
 // Get all plants in a user's garden (Protected route)
@@ -9,8 +9,8 @@ router.get('/', authenticateJWT, async (req, res) => {
     const result = await pool.query(
       `
       SELECT up.id AS user_plant_id, p.* 
-      FROM UserPlant up
-      JOIN Plant p ON up.plant_id = p.id
+      FROM user_plants up
+      JOIN plants p ON up.plant_id = p.id
       WHERE up.user_id = $1
       `,
       [req.user.id]
@@ -28,8 +28,8 @@ router.get('/:id', authenticateJWT, async (req, res) => {
     const result = await pool.query(
       `
       SELECT up.id AS user_plant_id, p.* 
-      FROM UserPlant up
-      JOIN Plant p ON up.plant_id = p.id
+      FROM user_plants up
+      JOIN plants p ON up.plant_id = p.id
       WHERE up.id = $1 AND up.user_id = $2
       `,
       [req.params.id, req.user.id]
@@ -52,7 +52,7 @@ router.post('/', authenticateJWT, async (req, res) => {
   try {
     const result = await pool.query(
       `
-      INSERT INTO UserPlant (user_id, plant_id, created_at, updated_at)
+      INSERT INTO user_plants (user_id, plant_id, created_at, updated_at)
       VALUES ($1, $2, NOW(), NOW())
       RETURNING *
       `,
@@ -70,7 +70,7 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
     const result = await pool.query(
       `
-      DELETE FROM UserPlant
+      DELETE FROM user_plants
       WHERE id = $1 AND user_id = $2
       RETURNING *
       `,

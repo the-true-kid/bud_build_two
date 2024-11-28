@@ -1,21 +1,13 @@
 const express = require('express');
 const app = express();
 const port = 5000;
-require('dotenv').config();  // Load environment variables
-const sequelize = require('./config/db');  // Import your Sequelize instance
-
-// Import associations
-require('./models/associations');
+require('dotenv').config(); // Load environment variables
+const pool = require('./config/db'); // Import the database connection pool
+const cors = require('cors');
 
 // Middleware
 app.use(express.json());
-
-const cors = require('cors');
-
-// Allow requests from your frontend (e.g., http://localhost:3000)
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
-
-
+app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' })); // Allow requests from the frontend
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -27,16 +19,19 @@ app.use('/auth', authRoutes);
 app.use('/plants', plantRoutes);
 app.use('/user-plants', userPlantRoutes);
 
-// Sync the database and start the server
+// Test the database connection before starting the server
 (async () => {
   try {
-    await sequelize.sync({ alter: true });  // Sync models with database
-    console.log('Database synced successfully!');
+    const client = await pool.connect();
+    console.log('Database connected successfully!');
+    client.release(); // Release the connection back to the pool
 
+    // Start the server
     app.listen(port, () => {
       console.log(`Server is running on http://localhost:${port}`);
     });
   } catch (error) {
-    console.error('Failed to sync database:', error);
+    console.error('Failed to connect to the database:', error);
+    process.exit(1); // Exit with a failure code
   }
 })();

@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('../db'); // Import the database connection pool
+const pool = require('../config/db');
 const router = express.Router();
 require('dotenv').config();
 
@@ -11,7 +11,7 @@ router.post('/register', async (req, res) => {
 
   try {
     // Check if the user already exists
-    const existingUserResult = await pool.query('SELECT * FROM User WHERE email = $1', [email]);
+    const existingUserResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (existingUserResult.rows.length > 0) {
       return res.status(400).json({ error: 'User already exists' });
     }
@@ -21,7 +21,7 @@ router.post('/register', async (req, res) => {
 
     // Create and save the new user
     const newUserResult = await pool.query(
-      'INSERT INTO User (username, email, password, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id, username, email',
+      'INSERT INTO users (username, email, password, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id, username, email',
       [username, email, hashedPassword]
     );
 
@@ -40,7 +40,7 @@ router.post('/login', async (req, res) => {
 
   try {
     // Find the user by email
-    const userResult = await pool.query('SELECT * FROM User WHERE email = $1', [email]);
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userResult.rows.length === 0) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
